@@ -1,0 +1,104 @@
+{
+  "entities": {
+    "bookmark": {
+      "title": "Bookmark",
+      "description": "A tactical marker, waypoint, or saved route artifact",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Display name" },
+        "lat": { "type": "number", "description": "Latitude" },
+        "lng": { "type": "number", "description": "Longitude" },
+        "category": { 
+          "type": "string", 
+          "enum": ["favorite", "waypoint", "warning", "other", "route"],
+          "description": "Tactical classification"
+        },
+        "icon": { "type": "string", "description": "Lucide icon name" },
+        "tags": { "type": "string", "description": "Space/comma-separated strings" },
+        "note": { "type": "string", "description": "Contextual notes" },
+        "savedAt": { "type": "number", "description": "Unix timestamp" },
+        "data": { "type": "object", "description": "JSON payload for GeoJSON or route segments" }
+      },
+      "required": ["name", "lat", "lng", "category", "savedAt"]
+    },
+    "custom_overlay": {
+      "title": "Custom Overlay",
+      "description": "Image/Tile overlays registered by the user",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "url": { "type": "string" },
+        "bounds": { "type": "array" },
+        "opacity": { "type": "number" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["name", "url", "bounds", "opacity"]
+    },
+    "cached_place": {
+      "title": "Cached Place",
+      "description": "Geocoded search result for offline lookup",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "display_name": { "type": "string" },
+        "lat": { "type": "number" },
+        "lng": { "type": "number" },
+        "category": { "type": "string" },
+        "type": { "type": "string" },
+        "cachedAt": { "type": "number" }
+      },
+      "required": ["name", "lat", "lng", "cachedAt"]
+    },
+    "mission_state": {
+      "title": "Mission State",
+      "description": "Operational parameters and UI state",
+      "type": "object",
+      "properties": {
+        "activeLayerId": { "type": "string" },
+        "isOnline": { "type": "boolean" },
+        "positionMode": { "type": "string", "enum": ["gps", "location"] },
+        "performanceMode": { "type": "string", "enum": ["high", "low"] },
+        "cacheMaxTiles": { "type": "number" },
+        "cacheMaxAgeDays": { "type": "number" },
+        "cacheAutoClean": { "type": "boolean" },
+        "lastActive": { "type": "number" }
+      }
+    },
+    "cell_tower_report": {
+      "title": "Cell Tower Report",
+      "description": "Intelligence on cellular infrastructure",
+      "type": "object",
+      "properties": {
+        "provider": { "type": "string" },
+        "type": { "type": "string", "enum": ["4G", "5G", "LTE"] },
+        "signal": { "type": "number", "description": "Signal strength in dBm" },
+        "lat": { "type": "number" },
+        "lng": { "type": "number" },
+        "timestamp": { "type": "number" }
+      },
+      "required": ["provider", "type", "signal", "lat", "lng", "timestamp"]
+    }
+  },
+  "firestore": {
+    "users/{userId}/bookmarks": {
+      "schema": "bookmark",
+      "description": "User specific waypoints"
+    },
+    "users/{userId}/overlays": {
+      "schema": "custom_overlay",
+      "description": "User specific map layers"
+    },
+    "users/{userId}/cached_places": {
+      "schema": "cached_place",
+      "description": "Search history"
+    },
+    "users/{userId}/mission_state": {
+      "schema": "mission_state",
+      "description": "Personal app configuration"
+    },
+    "cell_tower_reports": {
+      "schema": "cell_tower_report",
+      "description": "Global crowdsourced signal data"
+    }
+  }
+}

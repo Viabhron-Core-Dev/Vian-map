@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Vian Maps</title>
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icons/icon.svg" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0d0d0d" />
+  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.min.js"></script>
+  <script src="https://unpkg.com/lucide@0.294.0/dist/umd/lucide.min.js"></script>
+  <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
+</head>
+<body>
+
+  <div id="map"></div>
+
+  <div id="coord-box" title="Tap to cycle coordinate format">
+    <div id="coord-text">Loading…</div>
+    <div id="coord-meta"><span id="zoom-text">z3</span><span id="scale-text">1:—</span></div>
+  </div>
+
+  <div id="top-right">
+    <button id="toggle-internet" data-on="1">
+      <span class="dot green"></span><span class="toggle-label">ONLINE</span>
+    </button>
+    <div id="storage-pill">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+      <span id="storage-count">0 tiles</span>
+    </div>
+  </div>
+
+  <button id="btn-compass" title="Tap to reorient north"><span class="compass-needle">🧭</span></button>
+
+  <button id="btn-cache-vis" class="ctrl-btn" title="Show cached tile grid">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+      <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+    </svg>
+  </button>
+  <div id="cache-vis-legend">
+    <span class="legend-item"><span class="legend-swatch cached"></span>Cached</span>
+    <span class="legend-item"><span class="legend-swatch uncached"></span>Not cached</span>
+  </div>
+
+  <button id="btn-gps" class="ctrl-btn round" title="Track my location">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+  </button>
+  <div id="gps-status-pill">
+    <span class="dot green"></span><span id="gps-status-text">GPS active</span>
+  </div>
+
+  <!-- Search overlay -->
+  <div id="search-wrap">
+    <div id="search-bar">
+      <svg id="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="search-input" type="text" placeholder="Search places or paste a link…" autocomplete="off" autocorrect="off" spellcheck="false" />
+      <button id="search-clear-btn" title="Clear" style="display:none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <button id="search-paste-btn" title="Paste from clipboard">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2"/></svg>
+      </button>
+    </div>
+    <div id="search-results"></div>
+  </div>
+
+  <div id="progress-overlay">
+    <div id="progress-modal">
+      <div id="progress-title">Working…</div>
+      <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+      <div id="progress-pct">0%</div>
+    </div>
+  </div>
+
+  <div id="share-panel" class="bottom-panel">
+    <div class="panel-header"><span class="panel-title">Share Location</span><button class="panel-close">✕</button></div>
+    <div class="share-body">
+      <div id="share-coords-display" class="share-coords"></div>
+      <div class="share-formats">
+        <div class="share-fmt-row"><span class="share-fmt-label">Decimal</span><span id="share-val-decimal" class="share-fmt-val"></span><button class="share-copy-btn" data-target="decimal">Copy</button></div>
+        <div class="share-fmt-row"><span class="share-fmt-label">DMS</span><span id="share-val-dms" class="share-fmt-val"></span><button class="share-copy-btn" data-target="dms">Copy</button></div>
+        <div class="share-fmt-row"><span class="share-fmt-label">geo: URI</span><span id="share-val-geo" class="share-fmt-val"></span><button class="share-copy-btn" data-target="geo">Copy</button></div>
+      </div>
+      <button id="btn-share-native"  class="btn-primary"  style="margin-top:4px">Share via Android…</button>
+      <button id="btn-share-save-bm" class="btn-secondary" style="margin-top:8px">Save as Bookmark</button>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <div id="layer-panel" class="bottom-panel">
+    <div class="panel-header"><span class="panel-title">Map Layer</span><button class="panel-close">✕</button></div>
+    <div id="layer-grid"></div>
+  </div>
+
+  <div id="nav-panel" class="bottom-panel">
+    <div class="panel-header"><span class="panel-title">Tools</span><button class="panel-close">✕</button></div>
+    <div id="nav-tools">
+      <div class="nav-tool-row" id="tool-measure">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20M2 12l4-4M2 12l4 4M22 12l-4-4M22 12l-4 4"/></svg>
+        <div><div class="tool-label">Measure Distance / Area</div><div class="tool-desc">Tap points on the map to measure</div></div>
+      </div>
+      <div class="nav-tool-row" id="tool-eraser">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16l11-11 6 6-1.5 1.5"/><path d="M6.5 17.5l5-5"/></svg>
+        <div><div class="tool-label">Erase Cached Tiles</div><div class="tool-desc">Drag to remove tiles from offline cache</div></div>
+      </div>
+      <div class="nav-tool-row" id="tool-overlay">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        <div><div class="tool-label">Image Overlay</div><div class="tool-desc">Place &amp; calibrate a custom map image</div></div>
+      </div>
+      <div class="nav-tool-row" id="tool-export">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <div><div class="tool-label">Export Map as PNG</div><div class="tool-desc">Save the current view as an image file</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="points-panel" class="bottom-panel">
+    <div class="panel-header"><span class="panel-title">Bookmarks</span><button class="panel-close">✕</button></div>
+    <div id="bookmark-empty">Long-press anywhere on the map to save a point.</div>
+    <div id="bookmark-list"></div>
+  </div>
+
+  <div id="settings-panel" class="bottom-panel">
+    <div class="panel-header"><span class="panel-title">Settings</span><button class="panel-close">✕</button></div>
+    <div id="settings-content">
+      <div class="setting-section-header">Map cache</div>
+      <div class="setting-row">Auto-cache while traveling
+        <select id="setting-autocache" class="setting-select">
+          <option value="off">Off</option>
+          <option value="small">Small (100m)</option>
+          <option value="medium" selected>Medium (500m)</option>
+          <option value="large">Large (2km)</option>
+        </select>
+      </div>
+      <div class="setting-row">Cached tiles<span id="settings-tile-count">—</span></div>
+      <div class="setting-row">Clear tile cache<span id="btn-clear-cache" class="setting-danger-link">Clear</span></div>
+      <div class="setting-section-header">Backup &amp; restore</div>
+      <div class="setting-row setting-row-col">
+        <div class="setting-row-label">Export backup (.omapbak)</div>
+        <div class="setting-row-sub">Saves all bookmarks and optionally all cached tiles.</div>
+        <div class="backup-toggle-row"><label class="toggle-label-text"><input type="checkbox" id="backup-include-tiles" />Include cached tiles <span class="setting-warn">(can be large)</span></label></div>
+        <button id="btn-export-backup" class="setting-action-btn">Export backup</button>
+      </div>
+      <div class="setting-row setting-row-col">
+        <div class="setting-row-label">Import backup (.omapbak)</div>
+        <div class="setting-row-sub">Merges bookmarks from backup. Existing bookmarks are kept.</div>
+        <button id="btn-import-backup" class="setting-action-btn">Choose .omapbak file</button>
+        <input type="file" id="backup-file-input" accept=".omapbak" style="display:none" />
+      </div>
+      <div class="setting-section-header">About</div>
+      <div class="setting-row">Vian Maps<span>v1.0.0</span></div>
+    </div>
+  </div>
+
+  <div id="calibration-panel" class="bottom-panel">
+    <div class="panel-header"><span class="panel-title">Image Overlay</span><button class="panel-close">✕</button></div>
+    <div id="step-upload" class="cal-step">
+      <div class="cal-step-num">Step 1 of 3 — Choose image</div>
+      <p class="cal-step-desc">Upload any map image. It will appear over your current view so you can align it.</p>
+      <input type="file" id="overlay-upload" accept="image/*" style="display:none" />
+      <button id="btn-upload-trigger" class="cal-action-btn primary">Choose image file</button>
+    </div>
+    <div id="step-align" class="cal-step" style="display:none">
+      <div class="cal-step-num">Step 2 of 3 — Align corners</div>
+      <p class="cal-step-desc">Drag the four corner handles (NW, NE, SE, SW) to match landmarks on your image.</p>
+      <div class="cal-hint-row"><span class="cal-hint-dot"></span><span class="cal-hint-text">Zoom the map first to frame your area, then drag the handles.</span></div>
+      <div class="cal-align-actions">
+        <button id="btn-cal-reset"  class="cal-action-btn secondary">Start over</button>
+        <button id="btn-cal-apply" class="cal-action-btn primary">Apply ✓</button>
+      </div>
+    </div>
+    <div id="step-done" class="cal-step" style="display:none">
+      <div class="cal-step-num">Step 3 of 3 — Overlay active</div>
+      <p class="cal-step-desc">Your image is locked in. It will stay visible until you remove it.</p>
+      <div class="cal-align-actions">
+        <button id="btn-cal-readjust" class="cal-action-btn secondary">Re-adjust</button>
+        <button id="btn-cal-remove"   class="cal-action-btn danger">Remove overlay</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="save-bookmark-dialog" class="bottom-panel">
+    <div class="panel-header"><span class="panel-title">Save Bookmark</span><button class="panel-close">✕</button></div>
+    <div class="dialog-body">
+      <div id="bm-coords" class="bm-coord-display"></div>
+      <div class="field-group"><label class="field-label">Name</label><input id="bm-name" class="field-input" type="text" placeholder="e.g. Campsite, Corner shop…" maxlength="80" /></div>
+      <div class="field-group"><label class="field-label">Category</label>
+        <select id="bm-category" class="field-input">
+          <option value="other">Other</option><option value="shop">Shop</option>
+          <option value="pharmacy">Pharmacy</option><option value="transit">Transit</option>
+        </select>
+      </div>
+      <div class="field-group"><label class="field-label">Note <span style="color:#6b7280">(optional)</span></label><input id="bm-note" class="field-input" type="text" placeholder="Short note…" maxlength="160" /></div>
+      <div class="dialog-actions">
+        <button id="btn-save-bookmark-cancel" class="btn-secondary">Cancel</button>
+        <button id="btn-save-bookmark-confirm" class="btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="measure-panel" class="measure-panel">
+    <div class="measure-mode-row">
+      <button id="mmode-distance" class="measure-mode-btn active">Distance</button>
+      <button id="mmode-area"     class="measure-mode-btn">Area</button>
+    </div>
+    <div class="measure-totals">
+      <div id="measure-total" class="measure-total-val">0 m</div>
+      <div id="measure-sub"   class="measure-total-sub">0 points</div>
+    </div>
+    <div class="measure-actions">
+      <button id="mbtn-undo"  class="measure-btn">Undo</button>
+      <button id="mbtn-clear" class="measure-btn">Clear</button>
+      <button id="mbtn-save"  class="measure-btn accent">Save</button>
+      <button id="mbtn-done"  class="measure-btn done">Done</button>
+    </div>
+  </div>
+
+  <nav id="bottom-toolbar">
+    <button class="tab-btn active" id="tab-map">
+      <svg viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 0 1 3 16.382V5.618a1 1 0 0 1 1.447-.894L9 7M9 20l6-3M9 20V7m6 13l5.447-2.724A1 1 0 0 0 21 16.382V5.618a1 1 0 0 0-1.447-.894L15 7m0 13V7M9 7l6-2"/></svg>Map
+    </button>
+    <button class="tab-btn" id="tab-search">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Search
+    </button>
+    <button class="tab-btn" id="tab-navigate">
+      <svg viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Navigate
+    </button>
+    <button class="tab-btn" id="tab-points">
+      <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Points
+    </button>
+    <button class="tab-btn" id="tab-settings">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings
+    </button>
+  </nav>
+
+  <div id="toast"></div>
+  <div id="progress-overlay">
+    <div id="progress-box">
+      <div id="progress-label">Preparing export...</div>
+      <div id="progress-track"><div id="progress-bar"></div></div>
+      <div id="progress-pct">0%</div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

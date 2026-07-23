@@ -1,0 +1,9 @@
+{
+  "name": "Remix: Vianbhro Maps",
+  "description": "Professional offline cartography app with tactical geolocation. Features precision GPS tracking, robust tile caching, signal radar (cellular tower locator), and connection performance diagnostics.",
+  "requestFramePermissions": [
+    "geolocation",
+    "camera"
+  ],
+  "majorCapabilities": []
+}

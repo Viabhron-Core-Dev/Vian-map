@@ -1,0 +1,230 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --animate-bounce-slow: bounce-slow 2s infinite ease-in-out;
+  --animate-spin-slow: spin 10s linear infinite;
+
+  @keyframes bounce-slow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+}
+
+:root {
+  color-scheme: light dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer base {
+  html, body, #root {
+    @apply w-full h-full p-0 m-0 overflow-hidden select-none touch-none bg-zinc-950;
+  }
+}
+
+/* Tactical UI Polishing */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::selection {
+  @apply bg-blue-500/30;
+}
+
+.white-glass {
+  @apply bg-white/70 dark:bg-zinc-950/70 backdrop-blur-md border border-zinc-200/50 dark:border-zinc-800/50 shadow-lg;
+}
+
+.obsidian-glass {
+  @apply bg-zinc-100/95 dark:bg-zinc-950/95 backdrop-blur-xl border border-zinc-300 dark:border-white/10 shadow-2xl;
+}
+
+.tactical-font {
+  @apply font-mono tracking-tight;
+}
+
+.scale-line {
+  @apply h-[2px] bg-zinc-900 dark:bg-zinc-100 relative;
+}
+.scale-line::before, .scale-line::after {
+  content: '';
+  @apply absolute top-[-4px] w-[2px] h-[10px] bg-zinc-900 dark:bg-zinc-100;
+}
+.scale-line::before { left: 0; }
+.scale-line::after { right: 0; }
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-zinc-400 dark:bg-zinc-600 rounded-full;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.tactical-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.tactical-scrollbar::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+.tactical-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-zinc-200 dark:bg-zinc-700/50 rounded-full border-2 border-transparent bg-clip-padding;
+}
+.tactical-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+/* Map Rotation & Viewport Container */
+.tactical-map-viewport {
+  @apply fixed inset-0 overflow-hidden bg-zinc-100 dark:bg-zinc-950;
+  z-index: 1;
+}
+
+.tactical-rotated-container {
+  /* Dynamic rotation applied via JS variable */
+  width: 400% !important;
+  height: 400% !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) rotate(var(--map-rotation, 0deg)) !important;
+  transform-origin: center center !important;
+  transition: transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  background: transparent !important;
+}
+
+.tactical-rotated-container.is-active-rotating {
+  transition: none !important;
+}
+
+/* Counter-rotate elements to stay upright */
+.unrotate {
+  transform: rotate(calc(var(--map-rotation, 0deg) * -1)) !important;
+  transition: transform 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.is-active-rotating .unrotate {
+  transition: none !important;
+}
+
+/* Leaflet Overrides */
+.leaflet-container {
+  @apply !bg-transparent !font-sans;
+  background: transparent !important;
+}
+
+.leaflet-tile {
+  opacity: 1 !important;
+}
+
+.leaflet-tile-loaded {
+  opacity: 1;
+}
+
+.leaflet-tile-fade {
+  transition: opacity 400ms ease-in-out;
+}
+
+.leaflet-control-attribution {
+  background: rgba(255,255,255,0.7) !important;
+  color: #71717a !important;
+  @apply !font-mono;
+  font-size: 8px !important;
+  border-radius: 4px 0 0 0;
+  backdrop-filter: blur(8px);
+}
+
+.dark .leaflet-control-attribution {
+  background: rgba(9,9,11,0.5) !important;
+  color: #52525b !important;
+}
+
+.leaflet-bar {
+  @apply !border-zinc-200 dark:!border-zinc-800 !shadow-xl !rounded-lg !overflow-hidden;
+}
+
+.leaflet-bar a {
+  @apply !bg-white dark:!bg-zinc-900 !text-zinc-500 dark:!text-zinc-400 !border-zinc-200 dark:!border-zinc-800;
+}
+
+.leaflet-bar a:hover {
+  @apply !bg-zinc-50 dark:!bg-zinc-800 !text-zinc-900 dark:!text-zinc-100;
+}
+
+/* Custom Marker Styles */
+.user-mark-tag {
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+}
+
+.zoom-independent-tag {
+  filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3));
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 300ms ease-out forwards;
+}
+
+/* Performance Modes */
+.performance-low * {
+  animation-duration: 0ms !important;
+  transition-duration: 0ms !important;
+  animation-iteration-count: 1 !important;
+  backdrop-filter: none !important;
+}
+
+.performance-low .animate-ping,
+.performance-low .animate-pulse,
+.performance-low .animate-bounce-slow,
+.performance-low .selected-tile-rect {
+  animation: none !important;
+}
+
+/* Eraser Mode Highlight Tile Borders */
+.eraser-mode-active .leaflet-tile {
+  outline: 1px solid rgba(239, 68, 68, 0.5) !important;
+  outline-offset: -1px;
+  transition: all 0.2s ease;
+}
+
+.eraser-mode-active .leaflet-tile:hover {
+  outline: 3px solid rgba(239, 68, 68, 0.9) !important;
+  outline-offset: -3px;
+  background: rgba(239, 68, 68, 0.1) !important;
+  z-index: 1000 !important;
+  filter: brightness(1.1) contrast(1.1);
+}
+
+@keyframes tilePulse {
+  0% { fill-opacity: 0.7; }
+  50% { fill-opacity: 0.95; }
+  100% { fill-opacity: 0.7; }
+}
+
+.selected-tile-rect {
+  animation: tilePulse 2s infinite ease-in-out;
+  pointer-events: none;
+}
+
+/* Neon Roads for Lane Assistant */
+path.neon-road {
+  /* Provide a smooth, glowing aura matching the line color */
+  filter: drop-shadow(0 0 3px currentColor) drop-shadow(0 0 6px currentColor);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

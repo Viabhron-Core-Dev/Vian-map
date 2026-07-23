@@ -1,0 +1,77 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: |
+          rm -rf package-lock.json node_modules
+          npm install --legacy-peer-deps --force
+
+      - name: Build Web App
+        run: npm run build
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android Licenses
+        run: yes | sdkmanager --licenses || true
+
+      - name: Initial Android Project
+        run: |
+          echo "Checking for android directory..."
+          if [ ! -d "android" ]; then
+            echo "Creating android project..."
+            npx cap add android
+          else
+            echo "Android project already exists. Syncing..."
+          fi
+          
+          # Debug: List generated directory to verify structure
+          ls -R android | head -n 20
+          
+          echo "Generating app assets..."
+          # Ensure assets exist before generation
+          if [ -f "assets/icon.png" ]; then
+            # Use @capacitor/assets with specific flags for better reliability
+            npx @capacitor/assets generate --android --icon assets/icon.png --logo assets/icon.png || echo "Asset generation failed, continuing..."
+          fi
+          
+          node patch-android-permissions.js
+          node patch-android-build.js
+          npx cap sync android
+
+      - name: Build APK (Assemble Debug)
+        run: |
+          cd android
+          chmod +x gradlew
+          # Verify Java version
+          java -version
+          # Run build
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vian-maps-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
