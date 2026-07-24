@@ -163,6 +163,12 @@ const App: React.FC = () => {
       try {
         const url = new URL(data.url);
         const params = url.searchParams;
+        
+        if (params.get('widget') === 'true') {
+          // Opened from homescreen widget
+          setPerformanceMode('low'); // Example: optimize for quick view
+        }
+
         const lat = parseFloat(params.get('lat') || '');
         const lng = parseFloat(params.get('lng') || '');
         const zoom = parseInt(params.get('z') || '15', 10);

@@ -479,8 +479,9 @@ const MapComponent: React.FC = () => {
         zoomSnap={0.5}
         zoomDelta={0.5}
         wheelDebounceTime={100}
-        fadeAnimation={true}
-        zoomAnimation={true}
+        fadeAnimation={false}
+        zoomAnimation={false}
+        markerZoomAnimation={false}
       >
         <MapInstanceCapture />
         <RefreshListener />

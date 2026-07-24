@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Vian Maps</string>
+    <string name="title_activity_main">Vian Maps</string>
+    <string name="package_name">com.schuyler.vianmaps</string>
+    <string name="custom_url_scheme">com.schuyler.vianmaps</string>
+</resources>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FF111111">
+    <ImageView
+        android:id="@+id/widget_map_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:background="#FF222222" />
+    <ImageView
+        android:id="@+id/widget_compass"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_centerInParent="true"
+        android:src="@android:drawable/ic_menu_compass" />
+    <Button
+        android:id="@+id/btn_up"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:text="^"
+        android:background="#88000000"
+        android:textColor="#FFFFFF" />
+    <Button
+        android:id="@+id/btn_down"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:text="v"
+        android:background="#88000000"
+        android:textColor="#FFFFFF" />
+    <Button
+        android:id="@+id/btn_left"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:text="&lt;"
+        android:background="#88000000"
+        android:textColor="#FFFFFF" />
+    <Button
+        android:id="@+id/btn_right"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:text="&gt;"
+        android:background="#88000000"
+        android:textColor="#FFFFFF" />
+    <Button
+        android:id="@+id/btn_gps"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_margin="8dp"
+        android:text="GPS"
+        android:textSize="12sp"
+        android:background="#FF3B82F6"
+        android:textColor="#FFFFFF" />
+</RelativeLayout>
