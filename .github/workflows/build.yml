@@ -64,6 +64,7 @@ jobs:
       - name: Build APK (Assemble Debug)
         run: |
           cd android
+          gradle wrapper
           chmod +x gradlew
           # Verify Java version
           java -version
