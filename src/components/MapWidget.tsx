@@ -193,7 +193,11 @@ const WidgetControls: React.FC = () => {
   );
 };
 
-const MapWidget: React.FC = () => {
+interface MapWidgetProps {
+  onWake: () => void;
+}
+
+const MapWidget: React.FC<MapWidgetProps> = ({ onWake }) => {
   const [initialView] = useState(() => {
     const saved = localStorage.getItem('vian-maps-last-view');
     if (saved) {
@@ -208,8 +212,7 @@ const MapWidget: React.FC = () => {
   });
 
   const handleMapTap = () => {
-    // Navigate to main app and pass fromWidget=true
-    window.location.href = window.location.pathname + '?fromWidget=true';
+    onWake();
   };
 
   return (

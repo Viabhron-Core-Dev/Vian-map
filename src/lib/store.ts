@@ -73,6 +73,7 @@ interface ConfigState {
   isHudFolded: boolean;
   networkProvider: string;
   isLoggingEnabled: boolean;
+  isLogKeeperOpen: boolean;
   openCellIdKey: string | null;
   depthOverlay: 'none' | 'topo' | 'nautical' | 'weather' | 'vegetation' | 'clouds' | 'wind' | 'temperature';
   openWeatherMapKey: string | null;
@@ -113,6 +114,7 @@ interface ConfigState {
   setHudFolded: (folded: boolean) => void;
   setNetworkProvider: (provider: string) => void;
   setLoggingEnabled: (enabled: boolean) => void;
+  setLogKeeperOpen: (open: boolean) => void;
   setOpenCellIdKey: (key: string | null) => void;
   setDepthOverlay: (overlay: 'none' | 'topo' | 'nautical' | 'weather' | 'vegetation' | 'clouds' | 'wind' | 'temperature') => void;
   setOpenWeatherMapKey: (key: string | null) => void;
@@ -150,6 +152,7 @@ export const useConfigStore = create<ConfigState>((set) => ({
   isHudFolded: localStorage.getItem('vian-maps-hud-folded') !== 'false',
   networkProvider: localStorage.getItem('vian-maps-provider') || 'UNSPECIFIED',
   isLoggingEnabled: localStorage.getItem('vian-maps-logging') !== 'false',
+  isLogKeeperOpen: false,
   openCellIdKey: localStorage.getItem('vian-maps-opencellid-key') || null,
   depthOverlay: (localStorage.getItem('vian-maps-depth-overlay') as any) || 'none',
   openWeatherMapKey: localStorage.getItem('vian-maps-openweathermap-key') || null,
@@ -214,6 +217,7 @@ export const useConfigStore = create<ConfigState>((set) => ({
     localStorage.setItem('vian-maps-logging', String(isLoggingEnabled));
     set({ isLoggingEnabled });
   },
+  setLogKeeperOpen: (isLogKeeperOpen) => set({ isLogKeeperOpen }),
   setOpenCellIdKey: (openCellIdKey) => {
     if (openCellIdKey) {
       localStorage.setItem('vian-maps-opencellid-key', openCellIdKey);

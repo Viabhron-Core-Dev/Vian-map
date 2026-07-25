@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import MapComponent from './components/MapComponent';
 import MapWidget from './components/MapWidget';
 import Panel from './components/UI/Panel';
-import { Layers, Navigation, Bookmark, Wrench, Settings, Search, Map as MapIcon, Signal, SignalLow, Route, Zap, Menu, X, Download, Eraser, Hash, Circle, Plus, Minus, Cloud, CloudOff, Wifi, WifiOff, Locate, LocateFixed, LocateOff, Trash2, RefreshCw, Activity, Share2, ChevronUp, ChevronDown, Radio, Database, Box, BookOpen, Image as ImageIcon } from 'lucide-react';
+import { Layers, Navigation, Bookmark, Wrench, Settings, Search, Map as MapIcon, Signal, SignalLow, Route, Zap, Menu, X, Download, Eraser, Hash, Circle, Plus, Minus, Cloud, CloudOff, Wifi, WifiOff, Locate, LocateFixed, LocateOff, Trash2, RefreshCw, Activity, Share2, ChevronUp, ChevronDown, Radio, Database, Box, BookOpen, Image as ImageIcon, Terminal } from 'lucide-react';
 import { App as CapApp } from '@capacitor/app';
 import { Toast } from '@capacitor/toast';
 import { useConfigStore, useGPSStore, useMapStore } from './lib/store';
@@ -18,7 +18,7 @@ import { GPSMetricsRow } from './components/GPSMetricsRow';
 import { CompassButton } from './components/CompassButton';
 import { MapLayersPanel } from './components/MapLayersPanel';
 import { NavigationMenu } from './components/NavigationMenu';
-
+import { LogKeeper } from './components/LogKeeper';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useShallow } from 'zustand/react/shallow';
 import { db } from './lib/db';
@@ -27,6 +27,8 @@ import { appLogger } from './lib/logger';
 import { Geolocation } from '@capacitor/geolocation';
 
 const App: React.FC = () => {
+  const [isWidgetView, setIsWidgetView] = useState(() => new URLSearchParams(window.location.search).get('widget') === 'true');
+  const { isLogKeeperOpen, setLogKeeperOpen, isLoggingEnabled } = useConfigStore();
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const { 
     activeLayerId, 
@@ -353,9 +355,8 @@ const App: React.FC = () => {
   const scaleWidth = Math.min(100, 200 / mpp); // Aim for 200m representation, capped at 100% width
   const scaleLabel = mpp > 0 ? "200m" : "--";
 
-  const isWidgetView = new URLSearchParams(window.location.search).get('widget') === 'true';
   if (isWidgetView) {
-    return <MapWidget />;
+    return <MapWidget onWake={() => setIsWidgetView(false)} />;
   }
 
   return (
@@ -364,6 +365,22 @@ const App: React.FC = () => {
       <div className={`absolute inset-0 z-0 ${activeTool === '3d' ? 'invisible pointer-events-none' : 'visible'}`}>
         <MapComponent />
       </div>
+
+      <AnimatePresence>
+        {isLogKeeperOpen && (
+          <LogKeeper onClose={() => setLogKeeperOpen(false)} />
+        )}
+      </AnimatePresence>
+
+      {/* Global FAB for Log Keeper */}
+      {isLoggingEnabled && (
+        <button 
+          onClick={() => setLogKeeperOpen(true)}
+          className="absolute bottom-24 left-4 z-[2500] w-12 h-12 bg-[#2B301B]/90 backdrop-blur-md rounded-full flex items-center justify-center text-[#D4E09B] shadow-lg border border-[#D4E09B]/20 hover:bg-[#2B301B] transition-colors"
+        >
+          <Terminal className="w-5 h-5" />
+        </button>
+      )}
 
       {pendingContextMenu && (
         <div 

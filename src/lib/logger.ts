@@ -1,6 +1,11 @@
 import { db } from './db';
 import { useConfigStore } from './store';
 
+// Monkeypatch console for global interception
+const originalLog = console.log;
+const originalWarn = console.warn;
+const originalError = console.error;
+
 class Logger {
   private async write(level: 'info' | 'warn' | 'error', module: string, message: string, details?: any) {
     const { isLoggingEnabled } = useConfigStore.getState();
@@ -40,19 +45,46 @@ class Logger {
   }
 
   info(module: string, message: string, details?: any) {
-    console.log(`[${module}] INFO: ${message}`, details || '');
+    originalLog(`[${module}] INFO: ${message}`, details || '');
     this.write('info', module, message, details);
   }
 
   warn(module: string, message: string, details?: any) {
-    console.warn(`[${module}] WARN: ${message}`, details || '');
+    originalWarn(`[${module}] WARN: ${message}`, details || '');
     this.write('warn', module, message, details);
   }
 
   error(module: string, message: string, details?: any) {
-    console.error(`[${module}] ERROR: ${message}`, details || '');
+    originalError(`[${module}] ERROR: ${message}`, details || '');
     this.write('error', module, message, details);
   }
 }
 
 export const appLogger = new Logger();
+
+console.log = (...args) => {
+  originalLog.apply(console, args);
+  const msg = args.map(a => {
+    try { return typeof a === 'object' ? JSON.stringify(a) : String(a); }
+    catch(e) { return '[Unserializable object]'; }
+  }).join(' ');
+  appLogger.info('System', msg);
+};
+
+console.warn = (...args) => {
+  originalWarn.apply(console, args);
+  const msg = args.map(a => {
+    try { return typeof a === 'object' ? JSON.stringify(a) : String(a); }
+    catch(e) { return '[Unserializable object]'; }
+  }).join(' ');
+  appLogger.warn('System', msg);
+};
+
+console.error = (...args) => {
+  originalError.apply(console, args);
+  const msg = args.map(a => {
+    try { return typeof a === 'object' ? JSON.stringify(a) : String(a); }
+    catch(e) { return '[Unserializable object]'; }
+  }).join(' ');
+  appLogger.error('System', msg);
+};

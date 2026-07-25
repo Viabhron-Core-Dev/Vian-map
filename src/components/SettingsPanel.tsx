@@ -432,16 +432,12 @@ const SettingsPanel: React.FC = () => {
           </label>
         </div>
         <div className="flex flex-col gap-1 mt-1">
-          <div className="flex items-center gap-1">
-             <FileText className="w-3 h-3 text-teal-500" />
-             <span className="text-[7.5px] font-black text-teal-600 dark:text-teal-400 uppercase tracking-widest">COPY DIAGNOSTIC LOGS</span>
-          </div>
-          <div className="grid grid-cols-4 gap-1">
-            <button onClick={() => exportDiagnosticLogs(1)} disabled={isProcessing} className="py-1.5 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-md text-[8px] font-black uppercase tracking-tight flex items-center justify-center">1 HR</button>
-            <button onClick={() => exportDiagnosticLogs(12)} disabled={isProcessing} className="py-1.5 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-md text-[8px] font-black uppercase tracking-tight flex items-center justify-center">12 HR</button>
-            <button onClick={() => exportDiagnosticLogs(24)} disabled={isProcessing} className="py-1.5 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-md text-[8px] font-black uppercase tracking-tight flex items-center justify-center">24 HR</button>
-            <button onClick={() => exportDiagnosticLogs(0)} disabled={isProcessing} className="py-1.5 bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-md text-[8px] font-black uppercase tracking-tight flex items-center justify-center">ALL</button>
-          </div>
+          <button 
+            onClick={() => useConfigStore.getState().setLogKeeperOpen(true)}
+            className="py-2 mt-1 w-full bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-md text-[8px] font-black uppercase tracking-widest flex items-center justify-center gap-1.5"
+          >
+            <Terminal className="w-3 h-3" /> OPEN LOG KEEPER
+          </button>
         </div>
       </div>
 
