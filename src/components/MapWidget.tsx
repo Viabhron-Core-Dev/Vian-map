@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { MapContainer, useMap } from 'react-leaflet';
+import { MapContainer, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { useConfigStore, useGPSStore, useMapStore } from '../lib/store';
 import { MAP_LAYERS, OfflineTileLayer } from '../lib/OfflineLayer';
@@ -24,6 +24,7 @@ const LayerManager: React.FC = () => {
       maxZoom: layerConfig.maxZoom || 19,
       minZoom: 1,
       attribution: layerConfig.attribution,
+      noCache: layerConfig.noCache,
       detectRetina: true,
       className: 'transition-opacity duration-300'
     });
@@ -197,6 +198,15 @@ interface MapWidgetProps {
   onWake: () => void;
 }
 
+const MapClickWake: React.FC<{ onWake: () => void }> = ({ onWake }) => {
+  useMapEvents({
+    click: () => {
+      onWake();
+    }
+  });
+  return null;
+};
+
 const MapWidget: React.FC<MapWidgetProps> = ({ onWake }) => {
   const [initialView] = useState(() => {
     const saved = localStorage.getItem('vian-maps-last-view');
@@ -212,24 +222,21 @@ const MapWidget: React.FC<MapWidgetProps> = ({ onWake }) => {
   });
 
   const handleMapTap = () => {
+    window.history.replaceState({}, '', window.location.pathname + '?fromWidget=true');
     onWake();
   };
 
   return (
     <div className="w-full h-screen bg-zinc-950 relative overflow-hidden">
-      <div 
-        className="absolute inset-0 z-[1000] cursor-pointer" 
-        onClick={handleMapTap}
-      />
-      
       <MapContainer
         center={initialView.center}
         zoom={initialView.zoom}
         zoomControl={false}
-        className="w-full h-full"
+        className="w-full h-full pointer-events-none"
         attributionControl={false}
         preferCanvas={true}
       >
+        <MapClickWake onWake={handleMapTap} />
         <LayerManager />
         <VianVectorRoads />
         <IntelOverlay />

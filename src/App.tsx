@@ -122,6 +122,11 @@ const App: React.FC = () => {
     
     let lastBackPress = 0;
     const backButtonListener = CapApp.addListener('backButton', async (data) => {
+      if (isLogKeeperOpen) {
+        setLogKeeperOpen(false);
+        return;
+      }
+
       if (activePanel) {
         setActivePanel(null);
         return;
@@ -147,7 +152,7 @@ const App: React.FC = () => {
     return () => {
       backButtonListener.then(l => l.remove());
     };
-  }, [activePanel, activeTool]);
+  }, [activePanel, activeTool, isLogKeeperOpen, setLogKeeperOpen]);
 
   useEffect(() => {
     // Handle Shared Coordinates (PWA Deep Linking)

@@ -23,21 +23,24 @@ export const MAP_LAYERS: Record<string, LayerDefinition> = {
     name: 'Google Satellite',
     url: 'https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',
     attribution: '© Google Maps',
-    maxZoom: 20
+    maxZoom: 20,
+    noCache: true
   },
   hybrid: {
     id: 'hybrid',
     name: 'Google Hybrid (Backup)',
     url: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
     attribution: '© Google Maps',
-    maxZoom: 20
+    maxZoom: 20,
+    noCache: true
   },
   vianap: {
     id: 'vianap',
     name: 'Vianap Layer',
     url: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
     attribution: '© Google Maps, OSM Data',
-    maxZoom: 20
+    maxZoom: 20,
+    noCache: true
   },
   topo: {
     id: 'topo',
@@ -81,7 +84,11 @@ export class OfflineTileLayer extends L.TileLayer {
   }
 
   setAutoCache(auto: boolean) {
-    this.autoCache = auto;
+    if (this.options.noCache) {
+      this.autoCache = false;
+    } else {
+      this.autoCache = auto;
+    }
   }
 
   createTile(coords: L.Coords, done: L.DoneCallback): HTMLElement {
