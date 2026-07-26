@@ -232,14 +232,12 @@ const MapWidget: React.FC<MapWidgetProps> = ({ onWake }) => {
         center={initialView.center}
         zoom={initialView.zoom}
         zoomControl={false}
-        className="w-full h-full pointer-events-none"
+        className="w-full h-full"
         attributionControl={false}
         preferCanvas={true}
       >
         <MapClickWake onWake={handleMapTap} />
         <LayerManager />
-        <VianVectorRoads />
-        <IntelOverlay />
         <TagOverlay />
         <GPSMarker />
         <WidgetControls />

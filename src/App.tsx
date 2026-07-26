@@ -361,7 +361,24 @@ const App: React.FC = () => {
   const scaleLabel = mpp > 0 ? "200m" : "--";
 
   if (isWidgetView) {
-    return <MapWidget onWake={() => setIsWidgetView(false)} />;
+    return (
+      <>
+        <MapWidget onWake={() => setIsWidgetView(false)} />
+        <AnimatePresence>
+          {isLogKeeperOpen && (
+            <LogKeeper onClose={() => setLogKeeperOpen(false)} />
+          )}
+        </AnimatePresence>
+        {isLoggingEnabled && (
+          <button 
+            onClick={() => setLogKeeperOpen(true)}
+            className="absolute bottom-24 left-4 z-[2500] w-12 h-12 bg-[#2B301B]/90 backdrop-blur-md rounded-full flex items-center justify-center text-[#D4E09B] shadow-lg border border-[#D4E09B]/20 hover:bg-[#2B301B] transition-colors"
+          >
+            <Terminal className="w-5 h-5" />
+          </button>
+        )}
+      </>
+    );
   }
 
   return (

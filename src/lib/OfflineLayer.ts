@@ -138,29 +138,20 @@ export class OfflineTileLayer extends L.TileLayer {
         tile.src = url;
       } else if (this.isOnline) {
         const url = this.getTileUrl(coords);
-        try {
-          // Attempt fetch for offline caching if autoCache is enabled
-          if (this.autoCache) {
-            const response = await fetch(url, { referrerPolicy: 'no-referrer' });
-            if (response.ok) {
-              const blob = await response.blob();
-              await db.tiles.put({ id: key, data: blob, timestamp: Date.now() });
-              const blobUrl = URL.createObjectURL(blob);
-              this.blobUrls.set(key, blobUrl);
-              tile.src = blobUrl;
-            } else {
-              tile.src = url;
-            }
-          } else {
-            // Direct load without caching
-            tile.src = url;
-          }
-        } catch (fetchError) {
-          // CORS or Network error - fallback to direct source
-          if (fetchError instanceof Error && fetchError.name !== 'AbortError') {
-            console.warn(`Tile fetch/cache failed for ${url}, falling back to direct load.`, fetchError);
-          }
-          tile.src = url;
+        tile.src = url;
+
+        if (this.autoCache) {
+          // Attempt background fetch for offline caching without blocking render
+          fetch(url, { referrerPolicy: 'no-referrer' })
+            .then(async (response) => {
+              if (response.ok) {
+                const blob = await response.blob();
+                await db.tiles.put({ id: key, data: blob, timestamp: Date.now() });
+              }
+            })
+            .catch((fetchError) => {
+               // Ignore background cache errors
+            });
         }
       } else {
         // Transparent pixel placeholder for offline missing tiles
