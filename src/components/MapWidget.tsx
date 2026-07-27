@@ -7,6 +7,7 @@ import { Compass, Navigation2, ChevronUp, ChevronDown, ChevronLeft, ChevronRight
 import IntelOverlay from './IntelOverlay';
 import TagOverlay from './TagOverlay';
 import VianVectorRoads from './VianVectorRoads';
+import MapNavigationOverlay from './MapNavigationOverlay';
 
 const LayerManager: React.FC = () => {
   const map = useMap();
@@ -238,6 +239,7 @@ const MapWidget: React.FC<MapWidgetProps> = ({ onWake }) => {
       >
         <MapClickWake onWake={handleMapTap} />
         <LayerManager />
+        <MapNavigationOverlay />
         <TagOverlay />
         <GPSMarker />
         <WidgetControls />

@@ -141,17 +141,18 @@ export class OfflineTileLayer extends L.TileLayer {
         tile.src = url;
 
         if (this.autoCache) {
-          // Attempt background fetch for offline caching without blocking render
-          fetch(url, { referrerPolicy: 'no-referrer' })
-            .then(async (response) => {
-              if (response.ok) {
-                const blob = await response.blob();
-                await db.tiles.put({ id: key, data: blob, timestamp: Date.now() });
-              }
-            })
-            .catch((fetchError) => {
-               // Ignore background cache errors
-            });
+          // Delay background cache fetch so it doesn't compete with active panning/zooming.
+          // By the time this runs, the browser should have it in HTTP cache.
+          setTimeout(() => {
+            fetch(url, { referrerPolicy: 'no-referrer', cache: 'default' })
+              .then(async (response) => {
+                if (response.ok) {
+                  const blob = await response.blob();
+                  await db.tiles.put({ id: key, data: blob, timestamp: Date.now() });
+                }
+              })
+              .catch(() => {});
+          }, 1500);
         }
       } else {
         // Transparent pixel placeholder for offline missing tiles

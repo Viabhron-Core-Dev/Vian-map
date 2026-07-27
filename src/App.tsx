@@ -119,7 +119,9 @@ const App: React.FC = () => {
 
   useEffect(() => {
     appLogger.info('App', 'Vian Maps Platform started');
-    
+  }, []);
+
+  useEffect(() => {
     let lastBackPress = 0;
     const backButtonListener = CapApp.addListener('backButton', async (data) => {
       if (isLogKeeperOpen) {

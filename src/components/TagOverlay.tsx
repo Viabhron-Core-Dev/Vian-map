@@ -5,18 +5,18 @@ import { useConfigStore } from '../lib/store';
 import { db, Bookmark } from '../lib/db';
 
 const OVERPASS_TYPE_MAP: Record<string, string> = {
-  fuel: 'amenity=fuel',
-  gas: 'amenity=fuel',
-  hospital: 'amenity=hospital',
-  medical: 'amenity=hospital',
-  pharmacy: 'amenity=pharmacy',
-  police: 'amenity=police',
-  security: 'amenity=police',
-  water: 'amenity=drinking_water',
-  tower: 'man_made=tower',
-  bank: 'amenity=bank',
-  store: 'shop',
-  cafe: 'amenity=cafe'
+  fuel: '"amenity"="fuel"',
+  gas: '"amenity"="fuel"',
+  hospital: '"amenity"="hospital"',
+  medical: '"amenity"="hospital"',
+  pharmacy: '"amenity"="pharmacy"',
+  police: '"amenity"="police"',
+  security: '"amenity"="police"',
+  water: '"amenity"="drinking_water"',
+  tower: '"man_made"="tower"',
+  bank: '"amenity"="bank"',
+  store: '"shop"',
+  cafe: '"amenity"="cafe"'
 };
 
 interface POI {
@@ -127,15 +127,17 @@ const TagOverlay: React.FC = () => {
     }
 
     const currentZoom = map.getZoom();
-    // Allow fetching at lower zoom if specific filters are active, but bound it
-    const zoomThreshold = activeOsmFilters.length > 0 ? 8 : 12;
-    if (currentZoom < zoomThreshold) {
-      if (pois.length > 0) setPois([]);
-      return;
-    }
-
     const bounds = map.getBounds();
-    const bbox = `${bounds.getSouth()},${bounds.getWest()},${bounds.getNorth()},${bounds.getEast()}`;
+    
+    // If zoomed out, only query a limited area around the center to prevent massive overpass queries
+    let queryBounds = bounds;
+    if (currentZoom < 10) {
+      const center = map.getCenter();
+      // Roughly a 0.1 degree box (~10km) around center
+      queryBounds = L.latLngBounds([center.lat - 0.05, center.lng - 0.05], [center.lat + 0.05, center.lng + 0.05]);
+    }
+    
+    const bbox = `${queryBounds.getSouth()},${queryBounds.getWest()},${queryBounds.getNorth()},${queryBounds.getEast()}`;
     
     // Throttle: don't fetch if bbox hasn't changed much
     if (bbox === lastBbox.current) return;
@@ -149,7 +151,9 @@ const TagOverlay: React.FC = () => {
 
     if (!queries) return;
 
-    const overpassQuery = `[out:json][timeout:25];(${queries});out body;`;
+    // Use a center limit to prevent massive payload sizes when heavily zoomed out, but still show dots
+    const limit = currentZoom < 10 ? 50 : 200;
+    const overpassQuery = `[out:json][timeout:25];(${queries});out body ${limit};`;
     
     // Abort previous request
     if (abortControllerRef.current) abortControllerRef.current.abort();
@@ -183,7 +187,7 @@ const TagOverlay: React.FC = () => {
         lon: el.lon,
         name: el.tags.name || el.tags.amenity || el.tags.shop || 'Unknown POI',
         type: activeOsmFilters.find(f => {
-          const q = OVERPASS_TYPE_MAP[f];
+          const q = OVERPASS_TYPE_MAP[f].replace(/"/g, '');
           if (q.includes('=')) {
             const [k, v] = q.split('=');
             return el.tags[k] === v;
