@@ -8,6 +8,7 @@ import IntelOverlay from './IntelOverlay';
 import TagOverlay from './TagOverlay';
 import VianVectorRoads from './VianVectorRoads';
 import MapNavigationOverlay from './MapNavigationOverlay';
+import { appLogger } from '../lib/logger';
 
 const LayerManager: React.FC = () => {
   const map = useMap();
@@ -16,11 +17,13 @@ const LayerManager: React.FC = () => {
   const layerRef = useRef<OfflineTileLayer | null>(null);
 
   useEffect(() => {
+    appLogger.info('Widget', `LayerManager init. activeLayerId=${activeLayerId}, isOnline=${isOnline}`);
     if (layerRef.current) map.removeLayer(layerRef.current);
     
     const layerConfig = MAP_LAYERS[activeLayerId as keyof typeof MAP_LAYERS] || MAP_LAYERS.vianap;
     const url = layerConfig.url;
     
+    appLogger.info('Widget', `Initializing OfflineTileLayer with URL: ${url} and id: ${layerConfig.id}`);
     const layer = new OfflineTileLayer(url, layerConfig.id, {
       maxZoom: layerConfig.maxZoom || 19,
       minZoom: 1,
@@ -32,8 +35,10 @@ const LayerManager: React.FC = () => {
     
     layerRef.current = layer;
     layer.addTo(map);
+    appLogger.info('Widget', `Layer added to map successfully.`);
 
     return () => {
+      appLogger.info('Widget', `Cleaning up layer`);
       if (layerRef.current) map.removeLayer(layerRef.current);
     };
   }, [activeLayerId, isOnline, map]);
@@ -209,21 +214,30 @@ const MapClickWake: React.FC<{ onWake: () => void }> = ({ onWake }) => {
 };
 
 const MapWidget: React.FC<MapWidgetProps> = ({ onWake }) => {
+  useEffect(() => {
+    appLogger.info('Widget', 'MapWidget component mounted');
+    return () => appLogger.info('Widget', 'MapWidget component unmounted');
+  }, []);
+
   const [initialView] = useState(() => {
     const saved = localStorage.getItem('vian-maps-last-view');
     if (saved) {
       try {
         const { lat, lng, zoom } = JSON.parse(saved);
+        appLogger.info('Widget', `Initial view restored: lat=${lat}, lng=${lng}, zoom=${zoom}`);
         return { center: [lat, lng] as [number, number], zoom };
       } catch (e) {
         console.error('Failed to parse saved view', e);
+        appLogger.error('Widget', `Failed to parse saved view`, e);
       }
     }
+    appLogger.info('Widget', `Initial view default: 51.505, -0.09`);
     return { center: [51.505, -0.09] as [number, number], zoom: 13 };
   });
 
   const handleMapTap = () => {
     window.history.replaceState({}, '', window.location.pathname + '?fromWidget=true');
+    appLogger.info('Widget', `User tapped map widget, waking up full app.`);
     onWake();
   };
 
@@ -236,6 +250,9 @@ const MapWidget: React.FC<MapWidgetProps> = ({ onWake }) => {
         className="w-full h-full"
         attributionControl={false}
         preferCanvas={true}
+        whenReady={() => {
+           appLogger.info('Widget', `MapContainer whenReady fired`);
+        }}
       >
         <MapClickWake onWake={handleMapTap} />
         <LayerManager />

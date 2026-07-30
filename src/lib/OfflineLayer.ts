@@ -1,5 +1,6 @@
 import L from 'leaflet';
 import { db } from './db';
+import { appLogger } from './logger';
 
 export interface LayerDefinition {
   id: string;
@@ -160,7 +161,17 @@ export class OfflineTileLayer extends L.TileLayer {
       }
     } catch (error) {
       console.error('Tile error:', error);
-      done(error as any, tile);
+      appLogger.error('OfflineLayer', `Tile error for ${key}`, error);
+      // fallback to online url if we failed DB fetch
+      if (this.isOnline) {
+         try {
+           tile.src = this.getTileUrl(coords);
+         } catch (e) {
+           done(error as any, tile);
+         }
+      } else {
+         done(error as any, tile);
+      }
     }
   }
 

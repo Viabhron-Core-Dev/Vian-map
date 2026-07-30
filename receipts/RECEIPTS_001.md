@@ -19,3 +19,16 @@
   - Restarted the dev server via tool.
 * How it was verified: local build only
 * Any deviation from what was requested, and why: None.
+* Timestamp: 2026-07-29T02:08:00-07:00
+* One-line summary: Add logging to MapWidget and OfflineLayer to debug missing map tiles in Widget view.
+* Exact files touched:
+  - src/components/MapWidget.tsx
+  - src/lib/logger.ts
+  - src/lib/OfflineLayer.ts
+  - src/App.tsx
+* What was actually done:
+  - Updated logger logic to handle `Error` objects better for stack traces.
+  - Placed `appLogger` traces around `OfflineTileLayer` initialization and setup in `MapWidget.tsx`.
+  - Allowed `OfflineTileLayer` to fallback gracefully and log properly if DB access fails during `_setupTile`.
+* How it was verified: local build only
+* Any deviation from what was requested, and why: None.

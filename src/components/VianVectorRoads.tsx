@@ -77,15 +77,23 @@ export const VianVectorRoads: React.FC = () => {
              return;
         }
 
-        const query = `
-          [out:json];
-          way[highway](${s},${w},${n},${e});
-          out geom;
-        `;
+        const query = `[out:json][timeout:25];way[highway](${s},${w},${n},${e});out geom;`;
+
         const res = await fetch('https://overpass-api.de/api/interpreter', {
           method: 'POST',
-          body: query
+          body: new URLSearchParams({ data: query })
         });
+        
+        if (res.status === 429) {
+            console.warn('Overpass Rate Limit Exceeded (429).');
+            (window as any).__lastOverpassError = Date.now();
+            return;
+        }
+        
+        if (!res.ok) {
+            throw new Error(`HTTP Error: ${res.status}`);
+        }
+
         const text = await res.text();
         let data;
         try {

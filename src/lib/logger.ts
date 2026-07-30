@@ -65,7 +65,10 @@ export const appLogger = new Logger();
 console.log = (...args) => {
   originalLog.apply(console, args);
   const msg = args.map(a => {
-    try { return typeof a === 'object' ? JSON.stringify(a) : String(a); }
+    try { 
+      if (a instanceof Error) return a.stack || a.message;
+      return typeof a === 'object' ? JSON.stringify(a) : String(a); 
+    }
     catch(e) { return '[Unserializable object]'; }
   }).join(' ');
   appLogger.info('System', msg);
@@ -74,7 +77,10 @@ console.log = (...args) => {
 console.warn = (...args) => {
   originalWarn.apply(console, args);
   const msg = args.map(a => {
-    try { return typeof a === 'object' ? JSON.stringify(a) : String(a); }
+    try { 
+      if (a instanceof Error) return a.stack || a.message;
+      return typeof a === 'object' ? JSON.stringify(a) : String(a); 
+    }
     catch(e) { return '[Unserializable object]'; }
   }).join(' ');
   appLogger.warn('System', msg);
@@ -83,7 +89,10 @@ console.warn = (...args) => {
 console.error = (...args) => {
   originalError.apply(console, args);
   const msg = args.map(a => {
-    try { return typeof a === 'object' ? JSON.stringify(a) : String(a); }
+    try { 
+      if (a instanceof Error) return a.stack || a.message;
+      return typeof a === 'object' ? JSON.stringify(a) : String(a); 
+    }
     catch(e) { return '[Unserializable object]'; }
   }).join(' ');
   appLogger.error('System', msg);

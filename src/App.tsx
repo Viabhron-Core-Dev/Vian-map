@@ -26,6 +26,8 @@ import { appLogger } from './lib/logger';
 
 import { Geolocation } from '@capacitor/geolocation';
 
+let hasLoggedStart = false;
+
 const App: React.FC = () => {
   const [isWidgetView, setIsWidgetView] = useState(() => new URLSearchParams(window.location.search).get('widget') === 'true');
   const { isLogKeeperOpen, setLogKeeperOpen, isLoggingEnabled } = useConfigStore();
@@ -118,7 +120,10 @@ const App: React.FC = () => {
   }, [activeTool, setActiveTool]);
 
   useEffect(() => {
-    appLogger.info('App', 'Vian Maps Platform started');
+    if (!hasLoggedStart) {
+      appLogger.info('App', 'Vian Maps Platform started');
+      hasLoggedStart = true;
+    }
   }, []);
 
   useEffect(() => {
